@@ -1,4 +1,4 @@
-package iprwc.max;
+package tomaat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
