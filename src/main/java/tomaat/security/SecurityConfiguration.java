@@ -1,5 +1,6 @@
 package tomaat.security;
 
+import com.auth0.jwt.JWT;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,10 +20,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
-    @Autowired
-    private JWTFilter jwtFilter;
-    @Autowired
-    private MyUserDetailsService myUserDetailsService;
+    private final JWTFilter jwtFilter;
+    private final MyUserDetailsService myUserDetailsService;
+
+    public SecurityConfiguration(MyUserDetailsService myUserDetailsService) {
+        this.myUserDetailsService = myUserDetailsService;
+        this.jwtFilter = new JWTFilter(myUserDetailsService, new JWTUtil());
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -36,6 +40,12 @@ public class SecurityConfiguration {
                         // Beers
                         .requestMatchers(HttpMethod.POST, "/beer/newBeer").hasRole("Admin")
                         .requestMatchers(HttpMethod.GET, "/beer/getBeers").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/customer").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/customer").permitAll()
+                        // Temp
+                        .requestMatchers("/customer/**").permitAll()
+                        .requestMatchers("/users/**").permitAll()
 
 //                        .anyRequest().authenticated()
                 )
@@ -51,11 +61,6 @@ public class SecurityConfiguration {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 
     @Bean

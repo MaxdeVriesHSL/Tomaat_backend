@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @EntityScan("tomaat")
-@EnableJpaRepositories("tomaat.DAO")
 public class Main {
 	public static void main(String[] args) {
 		SpringApplication.run(Main.class, args);

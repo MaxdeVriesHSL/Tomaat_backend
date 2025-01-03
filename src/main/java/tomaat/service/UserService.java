@@ -3,6 +3,8 @@ package tomaat.service;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import tomaat.DAO.UserRepository;
 import tomaat.model.User;
 import org.springframework.stereotype.Service;
@@ -16,37 +18,26 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {this.userRepository = userRepository;}
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+    public List<User> getAllUsers() {
+        return userRepository.findUsers();
+    }
 
     public Optional<User> getById(UUID id) {
-        return this.userRepository.findById(id);
+        return userRepository.findById(id);
+    }
+
+    public Optional<User> getByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     public void createUser(User user) {
-        Firestore fireStore = FirestoreClient.getFirestore();
-
-        DocumentReference docReference = fireStore.collection("customer").document();
-
-        user.setId(UUID.fromString(docReference.getId()));
-        ApiFuture<WriteResult> apiFuture = docReference.set(user);
-    }
-
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        Firestore fireStore = FirestoreClient.getFirestore();
-
-        ApiFuture<QuerySnapshot> apiFuture = fireStore.collection("customer").get();
-        try {
-            QuerySnapshot querySnapshot = apiFuture.get();
-            for (DocumentSnapshot documentSnapshot : querySnapshot.getDocuments()) {
-                User user = documentSnapshot.toObject(User.class);
-                users.add(user);
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-
-        return users;
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
     }
 }

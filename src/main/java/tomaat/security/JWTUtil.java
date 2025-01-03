@@ -17,7 +17,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 @Component
 public class JWTUtil {
     @Value("${jwt_secret}")
-    private String secret;
+    private String secret = "7664b248-c803-4e57-b2f1-374deb53af14";
 
     public String generateToken(UUID id) throws IllegalArgumentException, JWTCreationException {
         int JWTExpirationInMinutes = 60;
