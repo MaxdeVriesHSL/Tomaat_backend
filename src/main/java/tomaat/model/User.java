@@ -8,27 +8,25 @@ import org.springframework.stereotype.Component;
 import javax.persistence.*;
 import java.util.UUID;
 
-@Entity
-@Table(name = "users")
 @Getter
 @Setter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private String id;
 
-    @Column(nullable = false)
     private String name;
-
-    @Column(unique = true, nullable = false)
     private String email;
-
-    private Long mobile;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id")
     private Role role;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
+    public UUID getUUID() {
+        return id != null ? UUID.fromString(id) : null;
+    }
+
+    public void setUUID(UUID uuid) {
+        this.id = uuid != null ? uuid.toString() : null;
+    }
 }
