@@ -7,10 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import tomaat.model.User;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Repository
@@ -59,8 +56,8 @@ public class UserRepository {
                     .get();
 
             if (!querySnapshot.isEmpty()) {
-                User user = querySnapshot.getDocuments().get(0).toObject(User.class);
-                user.setUUID(UUID.fromString(user.getId()));
+                DocumentSnapshot document = querySnapshot.getDocuments().get(0);
+                User user = document.toObject(User.class);
                 return Optional.of(user);
             }
             return Optional.empty();

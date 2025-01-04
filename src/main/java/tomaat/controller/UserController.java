@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/customer")
+@RequestMapping("/user")
 public class UserController {
     @Autowired
     UserService userService;
 
     @PostMapping
     public void createUser(@RequestBody User user) {
-        System.out.println("Received customer data: " + user);
+        System.out.println("Received user data: " + user);
         userService.createUser(user);
     }
 

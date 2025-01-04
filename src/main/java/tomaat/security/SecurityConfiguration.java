@@ -41,11 +41,16 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/beer/newBeer").hasRole("Admin")
                         .requestMatchers(HttpMethod.GET, "/beer/getBeers").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/customer").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/customer").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/user").permitAll()
                         // Temp
-                        .requestMatchers("/customer/**").permitAll()
-                        .requestMatchers("/users/**").permitAll()
+                        .requestMatchers("/user/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/auth/register").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
 
 //                        .anyRequest().authenticated()
                 )
