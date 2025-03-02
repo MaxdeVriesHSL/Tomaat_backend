@@ -29,8 +29,9 @@ public class User {
     private String salt;
 
     @JsonIgnore
-    private Map<String, Long> uuid;
+    private Map<String, Long> uuidMap;
 
+    @Exclude
     public UUID getUUID() {
         try {
             return id != null ? UUID.fromString(id) : null;
@@ -39,6 +40,7 @@ public class User {
         }
     }
 
+    @Exclude
     public void setUUID(UUID uuid) {
         this.id = uuid != null ? uuid.toString() : null;
     }
