@@ -47,10 +47,11 @@ public class AuthController {
             Optional<User> userOpt = this.userService.getByEmail(body.getEmail());
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                UsernamePasswordAuthenticationToken authInputToken =
-                        new UsernamePasswordAuthenticationToken(body.getEmail(), createHashPassword(body.getPassword(), user.getSalt()));
-
-                authManager.authenticate(authInputToken);
+                if (passwordEncoder.matches(body.getPassword(), user.getPassword())) {
+                    UsernamePasswordAuthenticationToken authInputToken =
+                            new UsernamePasswordAuthenticationToken(body.getEmail(), body.getPassword());
+                    authManager.authenticate(authInputToken);
+                }
                 String token = jwtUtil.generateToken(user.getUUID());
 
                 Map<String, Object> map = new HashMap<>();
@@ -62,7 +63,7 @@ public class AuthController {
             } else {
                 throw new RuntimeException("Invalid login credentials");
             }
-        } catch (NoSuchAlgorithmException authExc) {
+        } catch (Exception e) {
             throw new RuntimeException("Invalid Login Credentials");
         }
 
