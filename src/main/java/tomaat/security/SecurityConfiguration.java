@@ -23,9 +23,10 @@ public class SecurityConfiguration {
     private final JWTFilter jwtFilter;
     private final MyUserDetailsService myUserDetailsService;
 
-    public SecurityConfiguration(MyUserDetailsService myUserDetailsService) {
+    @Autowired
+    public SecurityConfiguration(MyUserDetailsService myUserDetailsService, JWTUtil jwtUtil) {
         this.myUserDetailsService = myUserDetailsService;
-        this.jwtFilter = new JWTFilter(myUserDetailsService, new JWTUtil());
+        this.jwtFilter = new JWTFilter(myUserDetailsService, jwtUtil);
     }
 
     @Bean
@@ -41,16 +42,17 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/beer/newBeer").hasRole("Admin")
                         .requestMatchers(HttpMethod.GET, "/beer/getBeers").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/user").permitAll()
-                        // Temp
-                        .requestMatchers("/user/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/auth/register").permitAll()
-                        .requestMatchers("/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
+//                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
+                        .requestMatchers("/user/**").authenticated()
+
+//                        // Temp
+//                        .requestMatchers("/user/**").permitAll()
+//                        .requestMatchers("/auth/**").permitAll()
+//                        .requestMatchers("/auth/register").permitAll()
+//                        .requestMatchers("/auth/login").permitAll()
+//                        .requestMatchers(HttpMethod.POST,"/auth/**").permitAll()
+//                        .requestMatchers(HttpMethod.POST,"/auth/register").permitAll()
+//                        .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
 
 //                        .anyRequest().authenticated()
                 )

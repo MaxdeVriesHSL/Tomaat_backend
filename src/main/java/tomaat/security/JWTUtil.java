@@ -16,8 +16,11 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 @Component
 public class JWTUtil {
-    @Value("${jwt_secret}")
-    private String secret = "7664b248-c803-4e57-b2f1-374deb53af14";
+    private final String secret;
+
+    public JWTUtil(@Value("${jwt_secret}") String secret) {
+        this.secret = secret;
+    }
 
     public String generateToken(UUID id) throws IllegalArgumentException, JWTCreationException {
         int JWTExpirationInMinutes = 60;
@@ -31,6 +34,7 @@ public class JWTUtil {
     }
 
     public String validateTokenAndRetrieveSubject(String token) throws JWTVerificationException {
+        System.out.println(secret);
         JWTVerifier verifier = JWT.require(Algorithm.HMAC256(secret))
                 .withSubject("User details")
                 .withIssuer("Tomaat")

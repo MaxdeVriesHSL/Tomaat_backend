@@ -5,6 +5,7 @@ import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import tomaat.model.Role;
 import tomaat.model.User;
 
 import java.util.*;
@@ -71,6 +72,12 @@ public class UserRepository {
             if (user.getUUID() == null) {
                 user.setUUID(UUID.randomUUID());
             }
+
+            if (user.getRole() == null) {
+                Role defaultRole = new Role("USER");
+                user.setRole(defaultRole);
+            }
+
             usersCollection.document(user.getId()).set(user).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error saving user", e);
