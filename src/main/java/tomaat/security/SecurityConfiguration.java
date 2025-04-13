@@ -43,7 +43,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/beer/getBeers").permitAll()
 
 //                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
-                        .requestMatchers("/user/**").authenticated()
+                        .requestMatchers("/user/**").hasRole("USER")
 
 //                        // Temp
 //                        .requestMatchers("/user/**").permitAll()
