@@ -2,7 +2,6 @@ package tomaat.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import tomaat.model.ApiResponse;
 import tomaat.model.Role;
@@ -11,28 +10,27 @@ import tomaat.service.RoleService;
 import tomaat.service.UserService;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-@Controller
+@RestController
 @RequestMapping(value = "/role")
 public class RoleController {
+    private static final List<String> VALID_ROLES = List.of("ADMIN", "USER");
 
     @Autowired
     private RoleService roleService;
+
     @Autowired
     private UserService userService;
 
     @GetMapping("/{userId}")
-    @ResponseBody
     public ApiResponse<String> getUserRole(@PathVariable UUID userId) {
         String role = this.roleService.getRoleNameByUserId(userId);
         return new ApiResponse<>(HttpStatus.OK, role, "");
     }
 
     @PostMapping("/setRole")
-    @ResponseBody
     public ApiResponse<User> setUserRole(@RequestBody User user) {
         Optional<User> userInDB = userService.getById(UUID.fromString(user.getId()));
         if (userInDB.isEmpty()) {
@@ -40,14 +38,15 @@ public class RoleController {
         }
 
         String roleName = user.getRole().getName();
-        if (!List.of("ADMIN", "USER").contains(roleName)) {
+        if (!VALID_ROLES.contains(roleName)) {
             return new ApiResponse<>(HttpStatus.BAD_REQUEST, "Invalid role name");
         }
 
         Role roleToSet = roleService.getByName(roleName);
-        userInDB.get().setRole(roleToSet);
+        User updatedUser = userInDB.get();
+        updatedUser.setRole(roleToSet);
 
-        userService.createUser(userInDB.get());
-        return new ApiResponse<>(HttpStatus.OK, userInDB.get(), "Role updated successfully");
+        userService.createUser(updatedUser);
+        return new ApiResponse<>(HttpStatus.OK, updatedUser, "Role updated successfully");
     }
 }

@@ -1,77 +1,110 @@
 package tomaat.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import tomaat.model.ApiResponse;
-import tomaat.model.LoginCredentials;
+import org.springframework.web.bind.annotation.*;
+import tomaat.model.Role;
 import tomaat.model.User;
 import tomaat.security.JWTUtil;
 import tomaat.service.UserService;
-import java.security.NoSuchAlgorithmException;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static tomaat.service.PasswordService.createHashPassword;
-import static tomaat.service.PasswordService.createSalt;
-
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    private final UserService userService;
-    private final JWTUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;
+    private static final String DEFAULT_ROLE = "USER";
 
-    public AuthController(UserService userService, JWTUtil jwtUtil, PasswordEncoder passwordEncoder) {
-        this.userService = userService;
-        this.jwtUtil = jwtUtil;
-        this.passwordEncoder = passwordEncoder;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private JWTUtil jwtUtil;
+    @Autowired
+    private AuthenticationManager authManager;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, Object>> registerHandler(@RequestBody User user) {
+        String encodedPass = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPass);
+
+        // Set default role if not provided
+        if (user.getRole() == null) {
+            Role defaultRole = new Role(DEFAULT_ROLE);
+            user.setRole(defaultRole);
+        }
+
+        userService.createUser(user);
+        String token = jwtUtil.generateToken(user);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("jwt-token", token);
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public Map<String, Object> loginHandler(@RequestBody LoginCredentials body) {
+    public ResponseEntity<Map<String, Object>> loginHandler(@RequestBody User loginUser) {
         try {
-            Optional<User> userOpt = this.userService.getByEmail(body.getEmail());
-            if (userOpt.isPresent()) {
-                User user = userOpt.get();
+            Optional<User> userOpt = userService.getByEmail(loginUser.getEmail());
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "Invalid credentials"));
+            }
 
-                String hashPassword = createHashPassword(body.getPassword(), user.getSalt());
-                if (!passwordEncoder.matches(hashPassword, user.getPassword())) {
-                    throw new RuntimeException("Invalid Login Credentials");
-                }
+            User user = userOpt.get();
 
-                String token = jwtUtil.generateToken(user.getUUID());
-                Map<String, Object> map = new HashMap<>();
-                map.put("jwt-token", token);
-                return map;
-            } else {
-                throw new RuntimeException("Invalid login credentials");
+            try {
+                // Authenticate with Spring Security
+                UsernamePasswordAuthenticationToken authInputToken =
+                        new UsernamePasswordAuthenticationToken(loginUser.getEmail(), loginUser.getPassword());
+
+                authManager.authenticate(authInputToken);
+                String token = jwtUtil.generateToken(user);
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("jwt-token", token);
+                response.put("user", Map.of(
+                        "id", user.getId(),
+                        "email", user.getEmail(),
+                        "name", user.getName(),
+                        "role", user.getRole().getName()
+                ));
+
+                return ResponseEntity.ok(response);
+            } catch (AuthenticationException e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "Invalid credentials"));
             }
         } catch (Exception e) {
-            throw new RuntimeException("Invalid Login Credentials");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Server error"));
         }
-
     }
 
-    @PostMapping("/register")
-    public ApiResponse<Map<String, Object>> registerHandler(@RequestBody Map<String, Object> body) throws NoSuchAlgorithmException {
-        String email = String.valueOf(body.get("email"));
-        Optional<User> userOpt = userService.getByEmail(email);
-        if (userOpt.isPresent()) {
-            return new ApiResponse<>(HttpStatus.BAD_REQUEST, "This email is already taken");
-        }
-        User user = new User((String) body.get("name"), (String) body.get("email"), (String) body.get("password"));
-        user.setSalt(createSalt());
-        String encodedPass = passwordEncoder.encode(createHashPassword(user.getPassword(), user.getSalt()));
-        user.setPassword(encodedPass);
-        userService.createUser(user);
-        String token = jwtUtil.generateToken(user.getUUID());
-        Map<String, Object> map = new HashMap<>();
-        map.put("jwt-token", token);
-        return new ApiResponse<>(HttpStatus.ACCEPTED, map);
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return userService.getByEmail(email)
+                .map(user -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("id", user.getId());
+                    response.put("email", user.getEmail());
+                    response.put("name", user.getName());
+                    response.put("role", Map.of("name", user.getRole().getName()));
+                    return ResponseEntity.ok(response);
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 }

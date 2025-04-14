@@ -15,32 +15,46 @@ import java.util.UUID;
 
 @Component
 public class MyUserDetailsService implements UserDetailsService {
-    private final UserService userService;
+    private static final String ROLE_PREFIX = "ROLE_";
+    private static final String DEFAULT_ROLE = "USER";
 
-    public MyUserDetailsService(UserService userService) {
-        this.userService = userService;
-    }
+    @Autowired
+    private UserService userService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userService.getByEmail(email)
-                .map(this::buildUserDetails)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-    }
+        Optional<User> userOptional = userService.getByEmail(email);
+        if (userOptional.isEmpty()) {
+            throw new UsernameNotFoundException("Could not find user with email = " + email);
+        }
 
-    public UserDetails loadUserById(String id) throws UsernameNotFoundException {
-        UUID uuid = UUID.fromString(id);
-        return userService.getById(uuid)
-                .map(this::buildUserDetails)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + id));
-    }
+        User user = userOptional.get();
 
-    private UserDetails buildUserDetails(User user) {
-        String grantedRole = "ROLE_" + user.getRole().getName();
+        String roleName = user.getRole() != null ? user.getRole().getName() : DEFAULT_ROLE;
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(ROLE_PREFIX + roleName);
+
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(grantedRole))
+                Collections.singletonList(authority)
+        );
+    }
+
+    public UserDetails loadUserById(String id) throws UsernameNotFoundException {
+        Optional<User> userOptional = userService.getById(UUID.fromString(id));
+        if (userOptional.isEmpty()) {
+            throw new UsernameNotFoundException("Could not find user with id = " + id);
+        }
+
+        User user = userOptional.get();
+
+        String roleName = user.getRole() != null ? user.getRole().getName() : DEFAULT_ROLE;
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(ROLE_PREFIX + roleName);
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                Collections.singletonList(authority)
         );
     }
 }

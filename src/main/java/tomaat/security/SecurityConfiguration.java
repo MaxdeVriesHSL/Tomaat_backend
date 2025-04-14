@@ -1,6 +1,5 @@
 package tomaat.security;
 
-import com.auth0.jwt.JWT;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -12,14 +11,22 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Configuration class for Spring Security settings
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
+    // Path constants for authorization rules
+    private static final String[] PUBLIC_AUTH_PATHS = {"/auth/login", "/auth/register"};
+    private static final String[] PUBLIC_BEER_GET_PATHS = {"/beer/getBeers", "/beer/type/**", "/beer/brewery/**", "/beer/*"};
+    private static final String[] ADMIN_BEER_PATHS = {"/beer/**"};
+    private static final String[] USER_PATHS = {"/user/**"};
+    private static final String USER_INFO_PATH = "/auth/me";
+
     private final JWTFilter jwtFilter;
     private final MyUserDetailsService myUserDetailsService;
 
@@ -37,24 +44,20 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configure(http))
                 .authorizeHttpRequests(auth -> auth
                         // Authentication
-                        .requestMatchers("/auth/**").permitAll()
-                        // Beers
-                        .requestMatchers(HttpMethod.POST, "/beer/newBeer").hasRole("Admin")
-                        .requestMatchers(HttpMethod.GET, "/beer/getBeers").permitAll()
+                        .requestMatchers(PUBLIC_AUTH_PATHS).permitAll()
 
-//                        .requestMatchers(HttpMethod.POST, "/user").permitAll()
-                        .requestMatchers("/user/**").hasRole("USER")
+                        // Public beer
+                        .requestMatchers(HttpMethod.GET, PUBLIC_BEER_GET_PATHS).permitAll()
 
-//                        // Temp
-//                        .requestMatchers("/user/**").permitAll()
-//                        .requestMatchers("/auth/**").permitAll()
-//                        .requestMatchers("/auth/register").permitAll()
-//                        .requestMatchers("/auth/login").permitAll()
-//                        .requestMatchers(HttpMethod.POST,"/auth/**").permitAll()
-//                        .requestMatchers(HttpMethod.POST,"/auth/register").permitAll()
-//                        .requestMatchers(HttpMethod.POST,"/auth/login").permitAll()
+                        // Admin
+                        .requestMatchers(HttpMethod.POST, "/beer/newBeer").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, ADMIN_BEER_PATHS).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, ADMIN_BEER_PATHS).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, ADMIN_BEER_PATHS).hasRole("ADMIN")
 
-//                        .anyRequest().authenticated()
+                        // User
+                        .requestMatchers(USER_PATHS).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(USER_INFO_PATH).authenticated()
                 )
                 .userDetailsService(myUserDetailsService)
                 .exceptionHandling(exception -> exception

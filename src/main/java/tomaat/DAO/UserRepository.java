@@ -1,8 +1,6 @@
 package tomaat.DAO;
 
-import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
-import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import tomaat.model.Role;
@@ -14,12 +12,14 @@ import java.util.concurrent.ExecutionException;
 @Repository
 public class UserRepository {
     private final CollectionReference usersCollection;
+    private static final String COLLECTION_NAME = "users";
+    private static final String EMAIL_FIELD = "email";
+    private static final String DEFAULT_ROLE = "USER";
 
     @Autowired
     public UserRepository(Firestore firestore) {
-        this.usersCollection = firestore.collection("users");
+        this.usersCollection = firestore.collection(COLLECTION_NAME);
     }
-
 
     public List<User> findUsers() {
         List<User> users = new ArrayList<>();
@@ -52,7 +52,7 @@ public class UserRepository {
     public Optional<User> findByEmail(String email) {
         try {
             QuerySnapshot querySnapshot = usersCollection
-                    .whereEqualTo("email", email)
+                    .whereEqualTo(EMAIL_FIELD, email)
                     .get()
                     .get();
 
@@ -74,7 +74,7 @@ public class UserRepository {
             }
 
             if (user.getRole() == null) {
-                Role defaultRole = new Role("USER");
+                Role defaultRole = new Role(DEFAULT_ROLE);
                 user.setRole(defaultRole);
             }
 
