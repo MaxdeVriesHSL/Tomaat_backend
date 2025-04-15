@@ -3,7 +3,9 @@ package tomaat.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tomaat.DAO.BeerRepository;
+import tomaat.DAO.BeerTypeRepository;
 import tomaat.model.Beer;
+import tomaat.model.BeerType;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,10 +14,12 @@ import java.util.UUID;
 @Service
 public class BeerService {
     private final BeerRepository beerRepository;
+    private final BeerTypeRepository beerTypeRepository;
 
     @Autowired
-    public BeerService(BeerRepository beerRepository) {
+    public BeerService(BeerRepository beerRepository, BeerTypeRepository beerTypeRepository) {
         this.beerRepository = beerRepository;
+        this.beerTypeRepository = beerTypeRepository;
     }
 
     public List<Beer> getAllBeers() {
@@ -31,10 +35,20 @@ public class BeerService {
     }
 
     public void createBeer(Beer beer) {
+        if (beer.getBeerTypeId() != null) {
+            Optional<BeerType> beerType = beerTypeRepository.findById(beer.getBeerTypeUUID());
+            beerType.ifPresent(type -> beer.setType(type.getName()));
+        }
+
         beerRepository.save(beer);
     }
 
     public void updateBeer(Beer beer) {
+        if (beer.getBeerTypeId() != null) {
+            Optional<BeerType> beerType = beerTypeRepository.findById(beer.getBeerTypeUUID());
+            beerType.ifPresent(type -> beer.setType(type.getName()));
+        }
+
         beerRepository.save(beer);
     }
 

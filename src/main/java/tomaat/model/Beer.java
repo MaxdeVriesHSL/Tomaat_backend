@@ -22,7 +22,13 @@ public class Beer {
 
     private String name;
     private String description;
+
+    // Store the beer type ID as a reference
+    private String beerTypeId;
+
+    // Type name for backward compatibility and ease of querying
     private String type;
+
     private double alcoholPercentage;
     private double price;
     private int stockQuantity;
@@ -45,11 +51,26 @@ public class Beer {
         this.id = uuid != null ? uuid.toString() : null;
     }
 
-    public Beer(String name, String description, String type,
+    @Exclude
+    public UUID getBeerTypeUUID() {
+        try {
+            return beerTypeId != null ? UUID.fromString(beerTypeId) : null;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    @Exclude
+    public void setBeerTypeUUID(UUID uuid) {
+        this.beerTypeId = uuid != null ? uuid.toString() : null;
+    }
+
+    public Beer(String name, String description, String type, String beerTypeId,
                 double alcoholPercentage, double price, int stockQuantity, String imageUrl) {
         this.name = name;
         this.description = description;
         this.type = type;
+        this.beerTypeId = beerTypeId;
         this.alcoholPercentage = alcoholPercentage;
         this.price = price;
         this.stockQuantity = stockQuantity;

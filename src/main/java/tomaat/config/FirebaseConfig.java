@@ -15,7 +15,7 @@ import java.io.IOException;
 @Configuration
 public class FirebaseConfig {
 
-    @Value("${firebase.credentials.path:src/main/java/tomaat/config/iprwc-max-firebase-adminsdk-ltwlx-80eb958e51.json}")
+    @Value("${firebase.credentials.path:src/main/java/tomaat/config/iprwc-max-firebase-adminsdk-ltwlx-b763a20b3a.json}")
     private String credentialsPath;
 
     @Bean

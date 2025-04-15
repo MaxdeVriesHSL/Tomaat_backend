@@ -23,7 +23,9 @@ public class SecurityConfiguration {
     // Path constants for authorization rules
     private static final String[] PUBLIC_AUTH_PATHS = {"/auth/login", "/auth/register"};
     private static final String[] PUBLIC_BEER_GET_PATHS = {"/beer/getBeers", "/beer/type/**", "/beer/brewery/**", "/beer/*"};
+    private static final String[] PUBLIC_BEERTYPE_GET_PATHS = {"/beerType/all", "/beerType/*"};
     private static final String[] ADMIN_BEER_PATHS = {"/beer/**"};
+    private static final String[] ADMIN_BEERTYPE_PATHS = {"/beerType/**"};
     private static final String[] USER_PATHS = {"/user/**"};
     private static final String USER_INFO_PATH = "/auth/me";
 
@@ -48,12 +50,18 @@ public class SecurityConfiguration {
 
                         // Public beer
                         .requestMatchers(HttpMethod.GET, PUBLIC_BEER_GET_PATHS).permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_BEERTYPE_GET_PATHS).permitAll()
 
-                        // Admin
+                        // Admin beer
                         .requestMatchers(HttpMethod.POST, "/beer/newBeer").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, ADMIN_BEER_PATHS).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, ADMIN_BEER_PATHS).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, ADMIN_BEER_PATHS).hasRole("ADMIN")
+
+                        // Admin beerType
+                        .requestMatchers(HttpMethod.POST, "/beerType/new").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, ADMIN_BEERTYPE_PATHS).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, ADMIN_BEERTYPE_PATHS).hasRole("ADMIN")
 
                         // User
                         .requestMatchers(USER_PATHS).hasAnyRole("USER", "ADMIN")
