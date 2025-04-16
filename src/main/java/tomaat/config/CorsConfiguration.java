@@ -21,7 +21,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
     private static final List<String> EXPOSED_HEADERS =
             List.of("x-auth-token");
 
-    @Value("${ALLOWED_ORIGINS:http://178.62.197.218,https://178.62.197.218}")
+    @Value("${ALLOWED_ORIGINS:http://localhost:4200,https://localhost:4200}")
     private String[] allowedOrigins;
 
     @Override
