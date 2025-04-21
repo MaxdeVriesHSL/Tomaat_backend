@@ -16,7 +16,7 @@ import java.util.function.Function;
 @RequestMapping("/beer")
 public class BeerController {
     @Autowired
-    private BeerService beerService;
+    public BeerService beerService;
 
     @GetMapping("/getBeers")
     public ResponseEntity<List<Beer>> getAllBeers() {
